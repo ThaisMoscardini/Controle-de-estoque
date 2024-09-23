@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meu Estoque VN Car Peças</title>
+    <meta charset="UTF-8">
+    <!--Importando bootstrap-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+</head>
+
+<body style="background-color:Whitesmoke">
+    <!-- Banner -->
+    <div id="banner-content">
+        <img src="header.png" width="1600" height="420">
+    </div>
+
+    <!-- Funções -->
+    <script type="text/javascript"> 
+
+function limparCampos() {
+    document.getElementById("idproduto").value = ""; 
+    document.getElementById("nomeproduto").value = ""; 
+    document.getElementById("ladoproduto").value = ""; 
+    document.getElementById("valorproduto").value = ""; 
+    document.getElementById("quantidadeproduto").value = "";
+    document.querySelector('#tabela-busca tbody').innerHTML = "";
+}
+
+        /// Inserção de dados
+        function inserir(event) {
+    event.preventDefault(); //para evitar o cancelamento do evento
+
+    // As variáveis para armazenar os dados digitados por usuário
+    const nome_produto = document.getElementById("nomeproduto").value;
+    const lado_produto = document.getElementById("ladoproduto").value;
+    const valor_produto = document.getElementById("valorproduto").value;
+    const quantidade_produto = document.getElementById("quantidadeproduto").value;
+
+    // Verificação se os campos estão preenchidos
+    if (nome_produto === "" || lado_produto === "" || valor_produto === "" || quantidade_produto === "") {
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    // Objeto com os dados a serem enviados para a API
+    const dados = {
+        nome_produto: nome_produto,
+        lado_produto: lado_produto,
+        valor_produto: valor_produto,
+        quantidade_produto: quantidade_produto
+    };
+
+    // Configuração da requisição fetch
+    const options = {
+        method: 'POST', // Método HTTP
+        headers: { 'Content-Type': 'application/json' }, // Tipo de conteúdo
+        body: JSON.stringify(dados) // Dados convertidos para JSON
+    };
+
+    // URL da API
+    const URL = 'http://localhost/projeto_integrador/api/Produtos';
+
+    // Envio da requisição
+    fetch(URL, options)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro ao inserir os dados!');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert("Dados inseridos com sucesso!");
+        console.log(data);
+        window.location.reload();
+    })
+    .catch(error => {
+        alert(error.message);
+        console.error('Erro ao inserir os dados:', error);
+    });
+
+        
+}
+
+
+        // Apresentar dados da API em tabela
+        let currentPage = 1;
+const itemsPerPage = 15;
+let data = [];
+
+function fetchData() {
+    const URL = 'http://localhost/projeto_integrador/api/Produtos';
+    fetch(URL, { method: 'GET' })
+        .then(response => response.json())
+        .then(responseData => {
+            data = responseData.data;
+            updateTable();
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+}
+
+function updateTable() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, data.length);
+    const slicedData = data.slice(startIndex, endIndex);
+
+    const tabela = document.querySelector('#tabela-produtos tbody');
+    tabela.innerHTML = '';
+
+    slicedData.forEach(item => {
+        const linha = document.createElement('tr');
+
+        const tdId = document.createElement('td');
+        tdId.textContent = item.codigo_produto;
+
+        const tdNome = document.createElement('td');
+        tdNome.textContent = item.nome_produto;
+
+        const tdLado = document.createElement('td');
+        tdLado.textContent = item.lado_produto;
+
+        const tdValor = document.createElement('td');
+        tdValor.textContent = item.valor_produto;
+
+        const tdQuantidade = document.createElement('td');
+        tdQuantidade.textContent = item.quantidade_produto;
+
+        linha.appendChild(tdId);
+        linha.appendChild(tdNome);
+        linha.appendChild(tdLado);
+        linha.appendChild(tdValor);
+        linha.appendChild(tdQuantidade);
+
+        linha.addEventListener('click', () => {
+            document.getElementById("idproduto").value = item.codigo_produto;
+            document.getElementById("nomeproduto").value = item.nome_produto;
+            document.getElementById("ladoproduto").value = item.lado_produto;
+            document.getElementById("valorproduto").value = item.valor_produto;
+            document.getElementById("quantidadeproduto").value = item.quantidade_produto;
+        });
+
+        tabela.appendChild(linha);
+    });
+}
+
+function nextPage() {
+    currentPage++;
+    updateTable();
+}
+
+function previousPage() {
+    currentPage--;
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+    updateTable();
+}
+
+fetchData();
+
+    // Exclusão de dados
+    function excluir(event) {
+    event.preventDefault(); //para evitar o cancelamento de evento
+    const codigo = parseInt(document.getElementById("idproduto").value);
+    if (!codigo) {
+        alert("Preencha o campo 'Código do Produto' corretamente!");
+        return;
+    }
+
+    const URL = `http://localhost/projeto_integrador/api/Produtos/${codigo}`;
+    fetch(URL, { method: 'DELETE' })
+        .then(resp => {
+            if (!resp.ok) {
+                throw new Error('Erro ao excluir os dados!');
+            }
+            return resp.json();
+        })
+        .then(data => {
+            alert("Dados excluídos com sucesso!");
+            limparCampos(); // Limpar os campos após a exclusão
+            window.location.reload();
+        })
+        .catch(error => {
+            alert(error.message);
+            console.error('Erro ao excluir os dados:', error);
+        });
+    // Limpar os campos no formulário
+    document.getElementById("idproduto").value = ""; 
+    document.getElementById("nomeproduto").value = ""; 
+    document.getElementById("ladoproduto").value = ""; 
+    document.getElementById("valorproduto").value = ""; 
+    document.getElementById("quantidadeproduto").value = "";
+}
+
+    //Editar dados
+    function editar(event){
+    event.preventDefault();   
+    
+    const nome_produto = document.getElementById("nomeproduto").value;
+    const lado_produto = document.getElementById("ladoproduto").value;
+    const valor_produto = document.getElementById("valorproduto").value;
+    const quantidade_produto = document.getElementById("quantidadeproduto").value;
+
+    // Verificação se os campos estão preenchidos
+    if (nome_produto === "" || lado_produto === "" || valor_produto === "" || quantidade_produto === "") {
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    // Objeto com os dados a serem enviados para a API
+    const dados = {
+        nome_produto: nome_produto,
+        lado_produto: lado_produto,
+        valor_produto: valor_produto,
+        quantidade_produto: quantidade_produto
+    };
+
+    // Uma lista para os dados de configuração
+    const codigo = parseInt(document.getElementById("idproduto").value);
+    if (!codigo) {
+        alert("Preencha o campo 'Código do Produto' corretamente!");
+        return;
+    }
+
+    const URL = `http://localhost/projeto_integrador/api/Produtos/${codigo}`;
+    const options = {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    };
+
+    fetch(URL, options)
+        .then(resp => {
+            if (!resp.ok) {
+                throw new Error('Erro ao editar os dados!');
+            }
+            return resp.json();
+        })
+        .then(data => {
+            alert("Dados alterados com sucesso!");
+            limparCampos(); // Limpar os campos após a edição
+            window.location.reload();
+        })
+        .catch(error => {
+            alert(error.message);
+            console.error('Erro ao editar os dados:', error);
+        });
+    // Limpar os dados nos campos no formulário
+    document.getElementById("idproduto").value = ""; 
+    document.getElementById("nomeproduto").value = ""; 
+    document.getElementById("ladoproduto").value = ""; 
+    document.getElementById("valorproduto").value = ""; 
+    document.getElementById("quantidadeproduto").value = "";
+}
+
+function buscarPorNome() {
+    const nomeproduto = document.getElementById("nomeproduto").value;
+
+    fetch(`http://localhost/projeto_integrador/api/Produtos?nome_produto=${nomeproduto}`, { method: 'GET' })
+        .then(response => response.json()) 
+        .then(data => {
+            const tabela = document.querySelector('#tabela-busca tbody');
+            tabela.innerHTML = '';
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                ['codigo_produto', 'nome_produto', 'lado_produto', 'valor_produto', 'quantidade_produto'].forEach(chave => {
+                    const td = document.createElement('td');
+                    td.textContent = item[chave];
+                    tr.appendChild(td);
+                });
+                tr.addEventListener('click', () => {
+                    document.getElementById("idproduto").value = item.codigo_produto;
+                    document.getElementById("nomeproduto").value = item.nome_produto;
+                    document.getElementById("ladoproduto").value = item.lado_produto;
+                    document.getElementById("valorproduto").value = item.valor_produto;
+                    document.getElementById("quantidadeproduto").value = item.quantidade_produto;
+                });
+
+                tabela.appendChild(tr);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao buscar por nome:', error);
+        });
+
+    return false;
+   
+}
+
+
+    </script>
+
+    <!-- Nav Bar -->
+    <div class="container">
+        <div>
+            <button type="button" class="btn btn-outline-secondary"><a href="MeuEstoque.html">Produtos</a></button>
+            <button type="button" class="btn btn-outline-secondary"><a href="https://www.olx.com.br/">Olx</a></button>
+            <button type="button" class="btn btn-outline-secondary"><a href="https://www.mercadolivre.com.br/">Mercado Livre</a></button>
+            <button type="button" class="btn btn-outline-secondary"><a href="https://web.whatsapp.com/">Whatsapp</a></button>
+        </div>
+
+        <div>
+            <br>
+            <br>
+            <h3>Controle de estoque</h3>
+            <br>
+        </div>
+        <div class="container">
+            <div class="row">
+               
+                <div class="col-md-6">
+                    <div>
+        <!--Controle de estoque-->
+
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">Id</span>
+          </div>
+          <input type="text" class="form-control" placeholder="Id produto" aria-label="Id" aria-describedby="basic-addon1" name="idproduto" id="idproduto">
+      </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Nome</span>
+            </div>
+            <input type="text" class="form-control" placeholder="Nome produto" aria-label="nome" aria-describedby="basic-addon1" name="nomeproduto" id="nomeproduto">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Lado</span>
+            </div>
+            <input type="text" class="form-control" placeholder="Lado produto" aria-label="lado" aria-describedby="basic-addon1" name="ladoproduto" id="ladoproduto">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Valor</span>
+            </div>
+            <input type="text" class="form-control" placeholder="Valor produto" aria-label="valor" aria-describedby="basic-addon1" name="valorproduto" id="valorproduto">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Quantidade</span>
+            </div>
+            <input type="text" class="form-control" placeholder="Quantidade produto" aria-label="quantidade" aria-describedby="basic-addon1" name="quantidadeproduto" id="quantidadeproduto">
+        </div>
+
+        <input type="button" class="btn btn-outline-primary" value="Inserir" onclick="inserir(event)">
+        <input type="button" class="btn btn-outline-primary" value="Editar" onclick="editar(event)">
+        <input type="button" class="btn btn-outline-primary" value="Excluir" onclick="excluir(event)">
+        <input type="button" class="btn btn-outline-primary" value="Limpar" onclick="limparCampos()">
+        <input type="button" class="btn btn-outline-primary" value="Buscar" onclick="buscarPorNome()" >
+    </div>
+    
+    </div>
+     <!--Tela que mostrará o resultado das buscas-->
+     <div class="col-md-6">
+        <div>
+            <div id="dados-busca"></div> 
+            <div>
+                <table id="tabela-busca" class="table table-hover">
+                  <thead class="thead-light">
+                          <tr>
+                              <th scope="col">Id</th>
+                              <th scope="col">Nome</th>
+                              <th scope="col">Lado</th>
+                              <th scope="col">Valor</th>
+                              <th scope="col">Quantidade</th>
+                          </tr>
+                      </thead>
+                      <tbody data-tabela>
+                
+                      </tbody>
+                      </table>
+                      </div>
+
+
+        </div>
+    </div>
+    </div>
+      
+    <!-- Tabela de pedidos -->
+    <div>
+      <table id="tabela-produtos" class="table table-hover">
+        <thead class="thead-light">
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Lado</th>
+                    <th scope="col">Valor</th>
+                    <th scope="col">Quantidade</th>
+                </tr>
+            </thead>
+            <tbody data-tabela>
+                
+            </tbody>
+            
+        </table>
+        <div style="display: flex; justify-content: center;">
+            <input type="button" class="btn btn-outline-primary" value="Anterior" onclick="previousPage()">
+            <input type="button" class="btn btn-outline-primary" value="Próxima" onclick="nextPage()">
+        </div>
+        
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>
+</html>
